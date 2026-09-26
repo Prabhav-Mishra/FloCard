@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Static FloCard community event notification workflow mockup">
+  <title>FloCard — Community Event Participants Mockup</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar" aria-label="Administration navigation">
+    <div class="brand" aria-label="FloCard">flocard<sup>®</sup></div>
+    <section class="profile-block">
+      <span class="eyebrow">WELCOME</span>
+      <strong>ADMIN USER</strong>
+      <span class="handle">@FLOCARD_ADMIN <i class="online-dot"></i></span>
+    </section>
+    <nav class="main-nav">
+      <a href="#"><span class="nav-icon">▦</span>Admin Dashboard</a>
+      <a href="#"><span class="nav-icon">▤</span>Pending Requests</a>
+      <a href="#" class="active"><span class="nav-icon">♟</span>All Communities</a>
+      <div class="nav-separator"></div>
+      <a href="#"><span class="nav-icon">←</span>Back to FloCard</a>
+      <div class="nav-separator"></div>
+      <a href="#"><span class="nav-icon">?</span>FAQs</a>
+      <a href="#"><span class="nav-icon">▣</span>FloCard Policies</a>
+      <a href="#"><span class="nav-icon">♬</span>Support</a>
+      <a href="#"><span class="nav-icon">◆</span>FloCard Guide <span class="nav-chevron">⌄</span></a>
+    </nav>
+    <footer class="sidebar-footer">
+      <span>◔</span>
+      <span>© 2026 FloCard</span>
+    </footer>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button" aria-label="Collapse navigation">‹</button>
+      <div class="avatar" aria-label="Admin profile">AU<i class="online-dot"></i></div>
+    </header>
+
+    <main class="main-content">
+      <button class="back-button">‹ Back to Community</button>
+      <h1>Community Event Participants</h1>
+
+      <section class="event-card" aria-label="Event information">
+        <div class="event-visual" aria-hidden="true">
+          <span class="event-visual-mark">FC</span>
+        </div>
+        <div class="event-copy">
+          <h2>Community Connect 2026</h2>
+          <p><span>▣</span> Event Time : 24/01/2026 04:00 PM - 24/01/2026 08:00 PM</p>
+          <p><span>●</span> Venue : The Central Club, Bengaluru, India</p>
+          <p><span>♟</span> Type : Community Event</p>
+        </div>
+        <button class="primary-button qr-button"><span>▦</span> Download Event Page QR</button>
+      </section>
+
+      <section class="participants-card">
+        <div class="participant-toolbar">
+          <div class="tabs" role="tablist" aria-label="Participant groups">
+            <button class="tab active" id="participantsTab" role="tab" aria-selected="true" data-tab="participants">
+              Participants <span class="count-badge" id="participantCount">0</span>
+            </button>
+            <button class="tab" id="preRegisteredTab" role="tab" aria-selected="false" data-tab="pre-registered">
+              Pre-Registered Participants <span class="count-badge" id="preRegisteredCount">0</span>
+            </button>
+          </div>
+          <button class="primary-button send-button" id="openNotificationButton">
+            <span>➤</span> Send Notification
+          </button>
+        </div>
+
+        <div class="table-search-row">
+          <label class="search-box" for="participantSearch">
+            <span aria-hidden="true">⌕</span>
+            <input id="participantSearch" type="search" placeholder="Search by name, email or phone..." autocomplete="off">
+          </label>
+          <div class="last-send-summary is-hidden" id="lastSendSummary" role="status"></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="participantTableBody"></tbody>
+          </table>
+          <div class="empty-state is-hidden" id="emptyState">No participants match this search.</div>
+        </div>
+
+        <div class="table-footer">
+          <span id="tableResultSummary">Showing 0 participants</span>
+          <div class="pagination">
+            <button class="secondary-button compact" id="previousPage">Previous</button>
+            <span id="pageIndicator">Page 1 of 1</span>
+            <button class="secondary-button compact" id="nextPage">Next</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop is-hidden" id="notificationModal" role="dialog" aria-modal="true" aria-labelledby="notificationTitle">
+    <section class="modal notification-modal">
+      <header class="modal-header">
+        <h2 id="notificationTitle"><span class="green-icon">✉</span> Send Notification</h2>
+        <button class="modal-close" data-close="notificationModal" aria-label="Close">×</button>
+      </header>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <label for="notificationType">Notification Type</label>
+          <select id="notificationType">
+            <option>Email</option>
+          </select>
+        </div>
+
+        <fieldset class="recipient-fieldset">
+          <legend>Recipients</legend>
+          <div class="radio-row">
+            <label class="radio-option">
+              <input type="radio" name="recipientMode" value="all" checked>
+              <span class="radio-ui"></span>All Participants
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="recipientMode" value="selected">
+              <span class="radio-ui"></span>Select from List
+            </label>
+            <strong class="selection-total" id="recipientModeCount">0 recipients</strong>
+          </div>
+        </fieldset>
+
+        <section class="recipient-selector is-hidden" id="recipientSelector" aria-label="Choose notification recipients">
+          <div class="selector-label-row">
+            <label for="recipientSearch">Choose Participants</label>
+            <button class="text-button" id="clearSelectionButton" type="button">Clear selection</button>
+          </div>
+          <div class="selected-chips" id="selectedChips">
+            <span class="selection-placeholder">No participants selected</span>
+          </div>
+          <label class="selector-search" for="recipientSearch">
+            <span>⌕</span>
+            <input id="recipientSearch" type="search" placeholder="Search by participant name or email..." autocomplete="off">
+          </label>
+          <div class="selector-actions">
+            <button class="text-button" id="selectVisibleButton" type="button">Select visible</button>
+            <span id="selectorResultCount">0 available</span>
+          </div>
+          <div class="recipient-options" id="recipientOptions"></div>
+          <div class="selected-count" id="selectedCount">0 participants selected</div>
+        </section>
+
+        <div class="form-group">
+          <label for="emailSubject">Subject</label>
+          <input id="emailSubject" type="text" maxlength="160" placeholder="Enter email subject..." value="Event Reminder: Community Connect 2026 — See You Soon!">
+        </div>
+
+        <div class="form-group">
+          <label id="messageLabel">Message</label>
+          <div class="rich-editor" aria-labelledby="messageLabel">
+            <div class="editor-toolbar" role="toolbar" aria-label="Email formatting controls">
+              <button type="button" data-command="bold" title="Bold"><b>B</b></button>
+              <button type="button" data-command="italic" title="Italic"><i>I</i></button>
+              <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+              <span class="toolbar-separator"></span>
+              <button type="button" data-command="insertUnorderedList" title="Bulleted list">☷</button>
+              <button type="button" data-command="insertOrderedList" title="Numbered list">☰</button>
+              <button type="button" data-command="justifyLeft" title="Align left">≡</button>
+              <button type="button" data-command="justifyCenter" title="Align center">≣</button>
+              <button type="button" data-command="justifyRight" title="Align right">≡</button>
+              <span class="toolbar-separator"></span>
+              <button type="button" id="insertLinkButton" title="Insert link">🔗</button>
+              <button type="button" id="insertImageButton" title="Insert image">▧</button>
+              <label class="color-control" title="Text color">
+                A<input type="color" id="textColor" value="#00d179">
+              </label>
+              <select id="formatBlock" title="Text style">
+                <option value="p">Paragraph</option>
+                <option value="h2">Heading</option>
+                <option value="h3">Subheading</option>
+              </select>
+              <input type="file" id="editorImageInput" accept="image/*" hidden>
+            </div>
+            <div id="messageEditor" class="editor-content" contenteditable="true" spellcheck="true">
+              <h2>Hi there! 👋</h2>
+              <p>We’re excited to see you at <strong style="color:#00d179">Community Connect 2026</strong>.</p>
+              <ul>
+                <li><strong>Date:</strong> Saturday, 24 January 2026</li>
+                <li><strong>Time:</strong> 04:00 PM – 08:00 PM</li>
+                <li><strong>Venue:</strong> The Central Club, Bengaluru, India</li>
+              </ul>
+              <p>Looking forward to your presence!</p>
+              <p>Warm regards,<br>FloCard Team</p>
+            </div>
+          </div>
+          <div class="editor-meta"><span>Rich-text email preview</span><span id="characterCount">0 characters</span></div>
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <span class="modal-status" id="modalStatus"></span>
+        <button class="secondary-button" data-close="notificationModal">Cancel</button>
+        <button class="secondary-button" id="previewButton">Preview</button>
+        <button class="primary-button" id="prepareSendButton"><span>➤</span> Send Notification</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop is-hidden nested" id="confirmationModal" role="dialog" aria-modal="true" aria-labelledby="confirmationTitle">
+    <section class="modal compact-modal">
+      <header class="modal-header">
+        <h2 id="confirmationTitle">Confirm Notification</h2>
+        <button class="modal-close" data-close="confirmationModal" aria-label="Close">×</button>
+      </header>
+      <div class="modal-body confirmation-content">
+        <div class="confirm-icon">✉</div>
+        <h3>Ready to send?</h3>
+        <p>The email notification will be sent to <strong id="confirmationCount">0 participants</strong>.</p>
+        <dl class="confirmation-details">
+          <div><dt>Recipient mode</dt><dd id="confirmationMode">All Participants</dd></div>
+          <div><dt>Subject</dt><dd id="confirmationSubject"></dd></div>
+        </dl>
+        <p class="confirmation-note">This mockup does not send real email or call an API.</p>
+      </div>
+      <footer class="modal-footer">
+        <button class="secondary-button" data-close="confirmationModal">Go Back</button>
+        <button class="primary-button" id="confirmSendButton">Confirm &amp; Send</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop is-hidden nested" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <section class="modal result-modal">
+      <div class="result-content">
+        <div class="result-icon" id="resultIcon">✓</div>
+        <h2 id="resultTitle">Notification Sent</h2>
+        <p id="resultMessage"></p>
+        <div class="result-stat"><strong id="resultCount">0</strong><span>participants notified</span></div>
+        <button class="primary-button" id="resultOkayButton">Okay</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop is-hidden nested" id="previewModal" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+    <section class="modal preview-modal">
+      <header class="modal-header">
+        <h2 id="previewTitle">Email Preview</h2>
+        <button class="modal-close" data-close="previewModal" aria-label="Close">×</button>
+      </header>
+      <div class="modal-body">
+        <div class="email-preview-subject" id="previewSubject"></div>
+        <article class="email-preview-body" id="previewBody"></article>
+      </div>
+      <footer class="modal-footer">
+        <button class="primary-button" data-close="previewModal">Close Preview</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
