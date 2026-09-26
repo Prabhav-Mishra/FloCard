@@ -24,13 +24,17 @@ Double-clicking `index.html` also works; browsers that block local JSON loading 
 
 - Participants and Pre-Registered Participants tabs.
 - Participant search and pagination.
-- Notification controls only on the Participants tab.
+- FloCard-style event summary with separate Event Page and Self Entry QR mock downloads.
+- Copy Event Entry Link mock action.
+- Pre-Registered Participants upload area with a working CSV template download and safe mock file selection.
+- Notification audience selection: Participants, Pre-Registered Participants, or Both Groups.
 - Exactly two recipient modes: All Participants and Select from List.
 - Searchable, scrollable, unlimited multi-select with name and masked email.
-- Subject and rich-text email editor, including formatting, links, text color and local image insertion.
+- Empty subject and rich-text email editor, including formatting, links, text color and local image insertion.
 - Email preview.
-- Recipient-count confirmation.
-- Mock success dialog with number of recipients notified.
+- Recipient-count and audience confirmation.
+- Dedicated simulated sending/loading state.
+- Detailed mock success/error result with audience, recipient count, time, and reference.
 - In-memory Notification badge/history update.
 - Validation errors for missing content or missing manual selection.
 
@@ -47,4 +51,5 @@ http://localhost:8080/?simulateError=1
 - `app.js` — static interaction logic.
 - `participants.json` — 100 participant and 20 pre-registered sample records with unique emails and phone numbers.
 - `assets/notification-ui-reference.png` — final approved-direction visual reference.
+- `assets/updated-mockup-preview.png` — browser-rendered preview of the updated main screen.
 

@@ -8,6 +8,7 @@ const state = {
   page: 1,
   search: "",
   recipientSearch: "",
+  audienceScope: "participants",
   recipientMode: "all",
   selectedIds: new Set(),
   pendingRecipientIds: [],
@@ -36,7 +37,11 @@ function cacheElements() {
     "confirmationSubject", "confirmSendButton", "resultModal", "resultIcon", "resultTitle",
     "resultMessage", "resultCount", "resultOkayButton", "previewModal", "previewSubject",
     "previewBody", "toastRegion", "textColor", "formatBlock", "insertLinkButton",
-    "insertImageButton", "editorImageInput",
+    "insertImageButton", "editorImageInput", "preRegistrationTools", "downloadTemplateButton",
+    "uploadParticipantButton", "participantUploadInput", "copyEventLinkButton",
+    "downloadEventQrButton", "downloadSelfEntryQrButton", "audienceParticipantCount",
+    "audiencePreRegisteredCount", "audienceBothCount", "confirmationAudience", "sendingModal",
+    "sendingMessage", "resultEyebrow", "resultAudience", "resultTime", "resultReference",
   ].forEach((id) => {
     elements[id] = document.getElementById(id);
   });
@@ -64,6 +69,12 @@ function bindEvents() {
   });
 
   elements.openNotificationButton.addEventListener("click", openNotificationModal);
+  elements.copyEventLinkButton.addEventListener("click", copyEventEntryLink);
+  elements.downloadEventQrButton.addEventListener("click", () => downloadMockQr("event-page", "Event Page"));
+  elements.downloadSelfEntryQrButton.addEventListener("click", () => downloadMockQr("self-entry", "Self Entry Link"));
+  elements.downloadTemplateButton.addEventListener("click", downloadParticipantTemplate);
+  elements.uploadParticipantButton.addEventListener("click", () => elements.participantUploadInput.click());
+  elements.participantUploadInput.addEventListener("change", handleParticipantUpload);
 
   document.querySelectorAll("[data-close]").forEach((button) => {
     button.addEventListener("click", () => closeModal(button.dataset.close));
@@ -79,6 +90,17 @@ function bindEvents() {
         renderRecipientSelector();
         window.setTimeout(() => elements.recipientSearch.focus(), 80);
       }
+    });
+  });
+
+  document.querySelectorAll('input[name="audienceScope"]').forEach((radio) => {
+    radio.addEventListener("change", (event) => {
+      state.audienceScope = event.target.value;
+      state.selectedIds.clear();
+      state.recipientSearch = "";
+      elements.recipientSearch.value = "";
+      elements.modalStatus.textContent = "";
+      renderRecipientSelector();
     });
   });
 
@@ -131,7 +153,7 @@ function bindEvents() {
 
   document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
     backdrop.addEventListener("mousedown", (event) => {
-      if (event.target === backdrop && backdrop.id !== "resultModal") closeModal(backdrop.id);
+      if (event.target === backdrop && !["resultModal", "sendingModal"].includes(backdrop.id)) closeModal(backdrop.id);
     });
   });
 
@@ -139,7 +161,7 @@ function bindEvents() {
     if (event.key !== "Escape") return;
     const openModals = [...document.querySelectorAll(".modal-backdrop:not(.is-hidden)")];
     const top = openModals.at(-1);
-    if (top && top.id !== "resultModal") closeModal(top.id);
+    if (top && !["resultModal", "sendingModal"].includes(top.id)) closeModal(top.id);
   });
 }
 
@@ -183,6 +205,9 @@ function renderAll() {
   const preRegistered = getPreRegistered();
   elements.participantCount.textContent = participants.length;
   elements.preRegisteredCount.textContent = preRegistered.length;
+  elements.audienceParticipantCount.textContent = `${participants.length} people`;
+  elements.audiencePreRegisteredCount.textContent = `${preRegistered.length} people`;
+  elements.audienceBothCount.textContent = `${participants.length + preRegistered.length} people`;
   updateRecipientCounts();
   renderTable();
 }
@@ -198,8 +223,8 @@ function switchTab(tabName) {
     tab.setAttribute("aria-selected", String(active));
   });
   const participantsActive = tabName === "participants";
-  elements.openNotificationButton.classList.toggle("is-hidden", !participantsActive);
-  elements.lastSendSummary.classList.toggle("is-hidden", !participantsActive || !elements.lastSendSummary.textContent);
+  elements.preRegistrationTools.classList.toggle("is-hidden", participantsActive);
+  elements.lastSendSummary.classList.toggle("is-hidden", !elements.lastSendSummary.textContent);
   elements.participantSearch.placeholder = participantsActive
     ? "Search by name, email or phone..."
     : "Search pre-registered participants...";
@@ -218,6 +243,18 @@ function getActiveRecords() {
   return state.activeTab === "participants" ? getParticipants() : getPreRegistered();
 }
 
+function getEligibleRecipients() {
+  if (state.audienceScope === "participants") return getParticipants();
+  if (state.audienceScope === "pre-registered") return getPreRegistered();
+  return [...getParticipants(), ...getPreRegistered()];
+}
+
+function getAudienceLabel() {
+  if (state.audienceScope === "participants") return "Participants";
+  if (state.audienceScope === "pre-registered") return "Pre-Registered Participants";
+  return "Participants and Pre-Registered";
+}
+
 function getFilteredActiveRecords() {
   if (!state.search) return getActiveRecords();
   return getActiveRecords().filter((record) =>
@@ -230,7 +267,7 @@ function renderTable() {
   const participantsActive = state.activeTab === "participants";
   elements.tableHead.innerHTML = participantsActive
     ? `<tr><th>SL.</th><th>NAME</th><th>EMAIL</th><th>PHONE</th><th>GENDER</th><th>STATUS</th><th>REMARKS</th><th>NOTIFICATION</th></tr>`
-    : `<tr><th>SL.</th><th>NAME</th><th>EMAIL</th><th>PHONE</th><th>STATUS</th><th>REMARKS</th></tr>`;
+    : `<tr><th>SL.</th><th>NAME</th><th>EMAIL</th><th>PHONE</th></tr>`;
 
   const filtered = getFilteredActiveRecords();
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -250,7 +287,7 @@ function renderTable() {
       <td title="${escapeHTML(maskEmail(record.email))}">${escapeHTML(maskEmail(record.email))}</td>
       <td>${escapeHTML(maskPhone(record.phone))}</td>`;
     if (!participantsActive) {
-      return `<tr>${common}<td><span class="status-badge ${statusClass}">${record.status}</span></td><td>${escapeHTML(record.remarks || "—")}</td></tr>`;
+      return `<tr>${common}</tr>`;
     }
     return `<tr>${common}<td>${escapeHTML(record.gender)}</td><td><span class="status-badge ${statusClass}">${record.status}</span></td><td>${escapeHTML(record.remarks || "—")}</td><td><span class="status-badge ${notificationClass}" title="${record.lastNotifiedAt ? `Last sent ${formatDate(record.lastNotifiedAt)}` : "No notification sent"}">${notificationLabel}</span></td></tr>`;
   }).join("");
@@ -265,12 +302,14 @@ function renderTable() {
 }
 
 function openNotificationModal() {
+  state.audienceScope = state.activeTab === "pre-registered" ? "pre-registered" : "participants";
   state.recipientMode = "all";
   state.selectedIds.clear();
   state.recipientSearch = "";
   elements.recipientSearch.value = "";
   elements.modalStatus.textContent = "";
   document.querySelector('input[name="recipientMode"][value="all"]').checked = true;
+  document.querySelector(`input[name="audienceScope"][value="${state.audienceScope}"]`).checked = true;
   elements.recipientSelector.classList.add("is-hidden");
   updateRecipientCounts();
   openModal("notificationModal");
@@ -287,9 +326,9 @@ function closeModal(id) {
 }
 
 function getVisibleRecipientOptions() {
-  const participants = getParticipants();
-  if (!state.recipientSearch) return participants;
-  return participants.filter((record) =>
+  const recipients = getEligibleRecipients();
+  if (!state.recipientSearch) return recipients;
+  return recipients.filter((record) =>
     record.name.toLowerCase().includes(state.recipientSearch)
     || record.email.toLowerCase().includes(state.recipientSearch),
   );
@@ -302,7 +341,7 @@ function renderRecipientSelector() {
 }
 
 function renderSelectedChips() {
-  const selected = getParticipants().filter((record) => state.selectedIds.has(record.id));
+  const selected = getEligibleRecipients().filter((record) => state.selectedIds.has(record.id));
   elements.selectedChips.innerHTML = selected.length
     ? selected.map((record) => `
         <span class="recipient-chip">
@@ -325,7 +364,7 @@ function renderRecipientOptions() {
 }
 
 function updateRecipientCounts() {
-  const count = state.recipientMode === "all" ? getParticipants().length : state.selectedIds.size;
+  const count = state.recipientMode === "all" ? getEligibleRecipients().length : state.selectedIds.size;
   elements.recipientModeCount.textContent = `${count} ${count === 1 ? "recipient" : "recipients"}`;
   elements.selectedCount.textContent = `${state.selectedIds.size} ${state.selectedIds.size === 1 ? "participant" : "participants"} selected`;
 }
@@ -391,10 +430,11 @@ function prepareSend() {
     return;
   }
   state.pendingRecipientIds = state.recipientMode === "all"
-    ? getParticipants().map((record) => record.id)
+    ? getEligibleRecipients().map((record) => record.id)
     : [...state.selectedIds];
   const count = state.pendingRecipientIds.length;
   elements.confirmationCount.textContent = `${count} ${count === 1 ? "participant" : "participants"}`;
+  elements.confirmationAudience.textContent = getAudienceLabel();
   elements.confirmationMode.textContent = state.recipientMode === "all" ? "All Participants" : "Select from List";
   elements.confirmationSubject.textContent = elements.emailSubject.value.trim();
   elements.modalStatus.textContent = "";
@@ -403,12 +443,15 @@ function prepareSend() {
 
 async function performMockSend() {
   elements.confirmSendButton.disabled = true;
-  elements.confirmSendButton.textContent = "Sending…";
-  await delay(850);
+  elements.confirmSendButton.textContent = "Preparing…";
+  closeModal("confirmationModal");
+  elements.sendingMessage.textContent = `Preparing ${state.pendingRecipientIds.length} ${state.pendingRecipientIds.length === 1 ? "recipient" : "recipients"} from ${getAudienceLabel().toLowerCase()}…`;
+  openModal("sendingModal");
+  await delay(1350);
 
   const simulateFailure = new URLSearchParams(window.location.search).get("simulateError") === "1";
   if (simulateFailure) {
-    closeModal("confirmationModal");
+    closeModal("sendingModal");
     showResult(false, 0, "Unable to send the notification. Please review the recipient details and try again.");
     resetConfirmButton();
     return;
@@ -424,14 +467,14 @@ async function performMockSend() {
       record.lastNotifiedAt = timestamp;
     });
     const count = state.pendingRecipientIds.length;
-    closeModal("confirmationModal");
+    closeModal("sendingModal");
     closeModal("notificationModal");
-    elements.lastSendSummary.textContent = `✓ Latest mock notification sent to ${count} ${count === 1 ? "participant" : "participants"}.`;
+    elements.lastSendSummary.textContent = `✓ Latest mock notification sent to ${count} ${count === 1 ? "recipient" : "recipients"} (${getAudienceLabel()}).`;
     elements.lastSendSummary.classList.remove("is-hidden");
     renderTable();
     showResult(true, count, `The email notification was successfully processed for ${count} ${count === 1 ? "participant" : "participants"}.`);
   } catch (error) {
-    closeModal("confirmationModal");
+    closeModal("sendingModal");
     showResult(false, 0, "Unable to send the notification. Please try again.");
     console.error(error);
   } finally {
@@ -447,15 +490,24 @@ function resetConfirmButton() {
 function showResult(success, count, message) {
   elements.resultModal.querySelector(".result-modal").classList.toggle("error", !success);
   elements.resultIcon.textContent = success ? "✓" : "!";
+  elements.resultEyebrow.textContent = success ? "DELIVERY COMPLETE" : "DELIVERY INTERRUPTED";
   elements.resultTitle.textContent = success ? "Notification Sent" : "Unable to Send";
   elements.resultMessage.textContent = message;
   elements.resultCount.textContent = count;
+  elements.resultAudience.textContent = getAudienceLabel();
+  elements.resultTime.textContent = new Intl.DateTimeFormat("en-IN", { hour: "2-digit", minute: "2-digit" }).format(new Date());
+  elements.resultReference.textContent = success
+    ? `Mock delivery reference: FC-${Date.now().toString().slice(-8)}`
+    : "No messages were sent. Your notification content is still available.";
   elements.resultCount.parentElement.classList.toggle("is-hidden", !success);
+  elements.resultOkayButton.textContent = success ? "Done" : "Back to Notification";
   openModal("resultModal");
 }
 
 function finishResultFlow() {
+  const failed = elements.resultModal.querySelector(".result-modal").classList.contains("error");
   closeModal("resultModal");
+  if (failed) return;
   state.selectedIds.clear();
   state.pendingRecipientIds = [];
   renderRecipientSelector();
@@ -464,6 +516,56 @@ function finishResultFlow() {
 function setModalError(message) {
   elements.modalStatus.textContent = message;
   showToast(message, true);
+}
+
+async function copyEventEntryLink() {
+  const mockLink = "https://flocard.example/community/events/run-for-community-2026";
+  try {
+    await navigator.clipboard.writeText(mockLink);
+    showToast("Event entry link copied to clipboard.");
+  } catch (error) {
+    showToast(`Mock event link: ${mockLink}`);
+  }
+}
+
+function downloadMockQr(kind, label) {
+  const cells = Array.from({ length: 121 }, (_, index) => {
+    const x = index % 11;
+    const y = Math.floor(index / 11);
+    const filled = ((x * 7 + y * 5 + index) % 4) < 2;
+    return filled ? `<rect x="${22 + x * 10}" y="${22 + y * 10}" width="8" height="8" rx="1"/>` : "";
+  }).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="420" viewBox="0 0 360 420"><rect width="360" height="420" fill="#fff"/><g fill="#111619">${cells}</g><rect x="14" y="14" width="126" height="126" fill="none" stroke="#111619" stroke-width="8"/><text x="180" y="180" fill="#111619" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700">FloCard</text><text x="180" y="215" fill="#334047" text-anchor="middle" font-family="Arial" font-size="15">${label}</text><text x="180" y="246" fill="#00a962" text-anchor="middle" font-family="Arial" font-size="13">Mock QR reference</text></svg>`;
+  downloadBlob(new Blob([svg], { type: "image/svg+xml" }), `flocard-${kind}-qr.svg`);
+  showToast(`${label} QR mock downloaded.`);
+}
+
+function downloadParticipantTemplate() {
+  const csv = "Name,Email,Phone\r\nSample Participant,sample@example.com,+91 9000000000\r\n";
+  downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), "flocard-pre-registered-participant-template.csv");
+  showToast("Participant upload template downloaded.");
+}
+
+function handleParticipantUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const allowed = /\.(csv|xls|xlsx)$/i.test(file.name);
+  showToast(
+    allowed ? `${file.name} selected for mock upload. No data was changed.` : "Please select a CSV or Excel participant list.",
+    !allowed,
+  );
+  event.target.value = "";
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function showToast(message, error = false) {

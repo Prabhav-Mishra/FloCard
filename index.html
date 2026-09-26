@@ -40,20 +40,32 @@
     </header>
 
     <main class="main-content">
-      <button class="back-button">‹ Back to Community</button>
-      <h1>Community Event Participants</h1>
+      <button class="back-button">‹ Back to Zero Waste</button>
+      <div class="page-heading-row">
+        <h1>Community Event Participants</h1>
+        <button class="copy-link-button" id="copyEventLinkButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 8H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3M10 4h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+          Copy Event Entry Link
+        </button>
+      </div>
 
       <section class="event-card" aria-label="Event information">
-        <div class="event-visual" aria-hidden="true">
-          <span class="event-visual-mark">FC</span>
-        </div>
         <div class="event-copy">
-          <h2>Community Connect 2026</h2>
-          <p><span>▣</span> Event Time : 24/01/2026 04:00 PM - 24/01/2026 08:00 PM</p>
-          <p><span>●</span> Venue : The Central Club, Bengaluru, India</p>
-          <p><span>♟</span> Type : Community Event</p>
+          <h2>Run for Community 2026</h2>
+          <p><strong>Event Time :</strong> 24/01/2026 04:00 PM - 24/01/2026 08:00 PM</p>
+          <p><strong>Venue :</strong> Central Community Ground, Bengaluru, India</p>
+          <p><strong>Type :</strong> Community Event</p>
+          <button class="primary-button event-qr-button" id="downloadEventQrButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4V4Zm2 2v2h2V6H6Zm8-2h6v6h-6V4Zm2 2v2h2V6h-2ZM4 14h6v6H4v-6Zm2 2v2h2v-2H6Zm8-2h2v2h-2v-2Zm4 0h2v4h-2v-4Zm-4 4h4v2h-4v-2Z"/></svg>
+            Download Event Page QR
+          </button>
         </div>
-        <button class="primary-button qr-button"><span>▦</span> Download Event Page QR</button>
+        <div class="self-entry-action">
+          <button class="primary-button qr-button" id="downloadSelfEntryQrButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4V4Zm2 2v2h2V6H6Zm8-2h6v6h-6V4Zm2 2v2h2V6h-2ZM4 14h6v6H4v-6Zm2 2v2h2v-2H6Zm8-2h2v2h-2v-2Zm4 0h2v4h-2v-4Zm-4 4h4v2h-4v-2Z"/></svg>
+            Download Self Entry Link QR
+          </button>
+        </div>
       </section>
 
       <section class="participants-card">
@@ -69,6 +81,22 @@
           <button class="primary-button send-button" id="openNotificationButton">
             <span>➤</span> Send Notification
           </button>
+        </div>
+
+        <div class="pre-registration-tools is-hidden" id="preRegistrationTools">
+          <div class="pre-registration-message">
+            <span class="info-icon" aria-hidden="true">i</span>
+            <span>Pre-Registered Participants can be added by uploading a list using the Excel template.</span>
+            <button class="secondary-button template-button" id="downloadTemplateButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 19h14"/></svg>
+              Download Template
+            </button>
+          </div>
+          <button class="outline-green-button" id="uploadParticipantButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4V5Zm4 9 3-3 2 2 2-2 3 3M12 16V7m0 0-3 3m3-3 3 3"/></svg>
+            Upload Participant List
+          </button>
+          <input id="participantUploadInput" type="file" accept=".csv,.xls,.xlsx" hidden>
         </div>
 
         <div class="table-search-row">
@@ -114,6 +142,24 @@
           </select>
         </div>
 
+        <fieldset class="audience-fieldset">
+          <legend>Send To</legend>
+          <div class="audience-options" role="radiogroup" aria-label="Participant group">
+            <label class="audience-option">
+              <input type="radio" name="audienceScope" value="participants" checked>
+              <span><strong>Participants</strong><small id="audienceParticipantCount">0 people</small></span>
+            </label>
+            <label class="audience-option">
+              <input type="radio" name="audienceScope" value="pre-registered">
+              <span><strong>Pre-Registered</strong><small id="audiencePreRegisteredCount">0 people</small></span>
+            </label>
+            <label class="audience-option">
+              <input type="radio" name="audienceScope" value="both">
+              <span><strong>Both Groups</strong><small id="audienceBothCount">0 people</small></span>
+            </label>
+          </div>
+        </fieldset>
+
         <fieldset class="recipient-fieldset">
           <legend>Recipients</legend>
           <div class="radio-row">
@@ -151,7 +197,7 @@
 
         <div class="form-group">
           <label for="emailSubject">Subject</label>
-          <input id="emailSubject" type="text" maxlength="160" placeholder="Enter email subject..." value="Event Reminder: Community Connect 2026 — See You Soon!">
+          <input id="emailSubject" type="text" maxlength="160" placeholder="Type notification subject...">
         </div>
 
         <div class="form-group">
@@ -180,17 +226,7 @@
               </select>
               <input type="file" id="editorImageInput" accept="image/*" hidden>
             </div>
-            <div id="messageEditor" class="editor-content" contenteditable="true" spellcheck="true">
-              <h2>Hi there! 👋</h2>
-              <p>We’re excited to see you at <strong style="color:#00d179">Community Connect 2026</strong>.</p>
-              <ul>
-                <li><strong>Date:</strong> Saturday, 24 January 2026</li>
-                <li><strong>Time:</strong> 04:00 PM – 08:00 PM</li>
-                <li><strong>Venue:</strong> The Central Club, Bengaluru, India</li>
-              </ul>
-              <p>Looking forward to your presence!</p>
-              <p>Warm regards,<br>FloCard Team</p>
-            </div>
+            <div id="messageEditor" class="editor-content" contenteditable="true" spellcheck="true" data-placeholder="Type your notification message..."></div>
           </div>
           <div class="editor-meta"><span>Rich-text email preview</span><span id="characterCount">0 characters</span></div>
         </div>
@@ -216,6 +252,7 @@
         <h3>Ready to send?</h3>
         <p>The email notification will be sent to <strong id="confirmationCount">0 participants</strong>.</p>
         <dl class="confirmation-details">
+          <div><dt>Send to</dt><dd id="confirmationAudience">Participants</dd></div>
           <div><dt>Recipient mode</dt><dd id="confirmationMode">All Participants</dd></div>
           <div><dt>Subject</dt><dd id="confirmationSubject"></dd></div>
         </dl>
@@ -228,14 +265,32 @@
     </section>
   </div>
 
+  <div class="modal-backdrop nested is-hidden" id="sendingModal" role="dialog" aria-modal="true" aria-labelledby="sendingTitle">
+    <section class="modal sending-modal">
+      <div class="sending-content">
+        <div class="sending-spinner" aria-hidden="true"><span></span></div>
+        <h2 id="sendingTitle">Sending notification</h2>
+        <p id="sendingMessage">Preparing recipients and email content…</p>
+        <div class="sending-progress" aria-hidden="true"><span></span></div>
+        <small>Please keep this window open. This is a simulated sending state.</small>
+      </div>
+    </section>
+  </div>
+
   <div class="modal-backdrop is-hidden nested" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
     <section class="modal result-modal">
       <div class="result-content">
-        <div class="result-icon" id="resultIcon">✓</div>
+        <div class="result-status-orbit"><div class="result-icon" id="resultIcon">✓</div></div>
+        <span class="result-eyebrow" id="resultEyebrow">DELIVERY COMPLETE</span>
         <h2 id="resultTitle">Notification Sent</h2>
         <p id="resultMessage"></p>
-        <div class="result-stat"><strong id="resultCount">0</strong><span>participants notified</span></div>
-        <button class="primary-button" id="resultOkayButton">Okay</button>
+        <div class="result-summary">
+          <div class="result-stat"><strong id="resultCount">0</strong><span>recipients notified</span></div>
+          <div class="result-detail"><span>Audience</span><strong id="resultAudience">Participants</strong></div>
+          <div class="result-detail"><span>Completed</span><strong id="resultTime">Just now</strong></div>
+        </div>
+        <p class="result-reference" id="resultReference">Mock delivery reference: —</p>
+        <button class="primary-button result-action" id="resultOkayButton">Done</button>
       </div>
     </section>
   </div>
